@@ -1,0 +1,42 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Step 2: Install dependencies
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+
+      # Step 3: Test the application
+      - name: Run tests
+        run: npm test
+
+      # Step 4: Deploy to EC2
+      - name: Deploy to EC2
+        env:
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+          KEY: ${{ secrets.EC2_KEY }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i $KEY $USER@$HOST "
+          cd /path/to/app &&
+          git pull &&
+          npm install &&
+          pm2 restart all || npm start
+          "
